@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vérification d'éligibilité au Chèque Numérique</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💳</text></svg>">
     <style>
         :root {
             --primary-color: #FF7A59;
@@ -229,25 +230,30 @@
         function searchEntreprise() {
             const siret = document.getElementById('siretInput').value.trim();
             const resultDiv = document.getElementById('result');
+            const companyInfoDiv = document.getElementById('company-info');
+            const resultsContainer = document.getElementById('results-container');
             
             if (siret.length !== 14 || !/^\d+$/.test(siret)) {
                 resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle message-icon"></i>Le numéro SIRET doit contenir 14 chiffres.</div>';
+                resultsContainer.style.display = 'block';
+                companyInfoDiv.innerHTML = '';
                 return;
             }
             
             resultDiv.innerHTML = '<p>Recherche en cours...</p>';
+            resultsContainer.style.display = 'grid';
             
-            fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1`)
-                .then(response => response.json())
-                .then(data => processResults(data, siret))
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle message-icon"></i>Une erreur est survenue lors de la recherche.</div>';
-                });
+            // Utiliser JSONP pour contourner les restrictions CORS
+            const script = document.createElement('script');
+            script.src = `https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1&callback=processResults`;
+            document.body.appendChild(script);
         }
         
-        function processResults(data, siret) {
+        function processResults(data) {
+            const siret = document.getElementById('siretInput').value.trim();
             const resultDiv = document.getElementById('result');
+            const companyInfoDiv = document.getElementById('company-info');
+            const resultsContainer = document.getElementById('results-container');
             
             if (data.total_results > 0) {
                 const item = data.results[0];
@@ -306,10 +312,6 @@
                     `;
                 }
                 
-                const resultsContainer = document.getElementById('results-container');
-                resultsContainer.style.display = 'grid';
-                
-                const companyInfoDiv = document.getElementById('company-info');
                 companyInfoDiv.innerHTML = `
                     <h3>Informations de l'entreprise</h3>
                     <p><strong>SIRET:</strong> ${siret}</p>
