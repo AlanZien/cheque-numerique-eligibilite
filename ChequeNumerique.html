@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification d'éligibilité au Chèque Numérique</title>
+    <style>
+        :root {
+            --primary-color: #FF7A59;
+            --secondary-color: #F9F0EC;
+            --light-bg: #FFFFFF;
+            --border-color: #E8E8E8;
+            --text-color: #333333;
+            --light-text: #FFFFFF;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        h2 {
+            font-size: 22px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        p {
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+        
+        .search-container {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        #siretInput {
+            flex-grow: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 6px 0 0 6px;
+            outline: none;
+        }
+        
+        button {
+            padding: 15px 25px;
+            font-size: 16px;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border: none;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            background-color: #E86A4D;
+        }
+        
+        .results-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        #company-info {
+            padding: 20px;
+            background-color: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        #company-info p {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #result {
+            padding: 20px;
+            background-color: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .criteria-list {
+            list-style-type: none;
+            margin-top: 15px;
+        }
+        
+        .criteria-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .criteria-list li.success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+        
+        .criteria-list li.danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .criteria-list li i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .success-message {
+            padding: 15px;
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-message {
+            padding: 15px;
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        
+        .message-icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: #777;
+            font-size: 14px;
+        }
+        
+        h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .criteria-header {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+            }
+            
+            #siretInput {
+                border-right: 1px solid var(--border-color);
+                border-radius: 6px 6px 0 0;
+            }
+            
+            button {
+                border-radius: 0 0 6px 6px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <h1>Vérification d'éligibilité au Chèque Numérique</h1>
+    
+    <div class="search-container">
+        <input type="text" id="siretInput" placeholder="Entrez le numéro SIRET (14 chiffres)" maxlength="14">
+        <button onclick="searchEntreprise()">Vérifier l'éligibilité</button>
+    </div>
+    
+    <div class="results-layout" id="results-container" style="display: none;">
+        <div id="company-info"></div>
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        function searchEntreprise() {
+            const siret = document.getElementById('siretInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (siret.length !== 14 || !/^\d+$/.test(siret)) {
+                resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle message-icon"></i>Le numéro SIRET doit contenir 14 chiffres.</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Recherche en cours...</p>';
+            
+            fetch(`https://recherche-entreprises.api.gouv.fr/search?q=${siret}&page=1&per_page=1`)
+                .then(response => response.json())
+                .then(data => processResults(data, siret))
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    resultDiv.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle message-icon"></i>Une erreur est survenue lors de la recherche.</div>';
+                });
+        }
+        
+        function processResults(data, siret) {
+            const resultDiv = document.getElementById('result');
+            
+            if (data.total_results > 0) {
+                const item = data.results[0];
+                const entreprise = item;
+                const siege = entreprise.siege;
+                
+                // Vérifier l'éligibilité
+                const dateCreation = new Date(siege.date_creation);
+                const etatAdministratif = entreprise.etat_administratif;
+                const codeNaf = siege.activite_principale;
+                const effectif = siege.effectif;
+                const effectifMin = siege.effectif_min;
+                const departement = siege.code_postal ? siege.code_postal.substring(0, 2) : null;
+                const dirigeant = entreprise.dirigeants && entreprise.dirigeants.length > 0 ? 
+                    entreprise.dirigeants[0].nom + ' ' + entreprise.dirigeants[0].prenoms : 'Non disponible';
+                
+                // Vérifier si le département est en Île-de-France
+                const departementsIDF = ['75', '77', '78', '91', '92', '93', '94', '95'];
+                const isIDF = departement && departementsIDF.includes(departement);
+                
+                const status = checkEntrepriseStatus(dateCreation, effectifMin, etatAdministratif, codeNaf, isIDF, dirigeant);
+                
+                if (status.eligible) {
+                    resultDiv.innerHTML = `
+                        <h3>${entreprise.nom_complet || entreprise.nom_raison_sociale}</h3>
+                        <div class="success-message">
+                            <i class="fas fa-check-circle message-icon"></i>
+                            Entreprise éligible au chèque numérique
+                        </div>
+                        <div class="criteria-header">Vérification des critères</div>
+                        <ul class="criteria-list">
+                            ${status.criteria.map(criterion => `
+                                <li class="success">
+                                    <i class="fas fa-check"></i>
+                                    ${criterion}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>${entreprise.nom_complet || entreprise.nom_raison_sociale}</h3>
+                        <div class="error-message">
+                            <i class="fas fa-times-circle message-icon"></i>
+                            Entreprise non éligible au chèque numérique
+                        </div>
+                        <div class="criteria-header">Raisons de non-éligibilité</div>
+                        <ul class="criteria-list">
+                            ${status.reasons.map(reason => `
+                                <li class="danger">
+                                    <i class="fas fa-times"></i>
+                                    ${reason}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                }
+                
+                const resultsContainer = document.getElementById('results-container');
+                resultsContainer.style.display = 'grid';
+                
+                const companyInfoDiv = document.getElementById('company-info');
+                companyInfoDiv.innerHTML = `
+                    <h3>Informations de l'entreprise</h3>
+                    <p><strong>SIRET:</strong> ${siret}</p>
+                    <p><strong>SIREN:</strong> ${entreprise.siren}</p>
+                    <p><strong>Code NAF:</strong> ${status.codeNAF || 'Non disponible'}</p>
+                    <p><strong>Département:</strong> ${status.departement || 'Non disponible'} ${status.isIDF ? '(Île-de-France)' : ''}</p>
+                    <p><strong>Date de création:</strong> ${formatDate(status.dateCreation)}</p>
+                    <p><strong>Effectif:</strong> ${status.effectifMin} salariés minimum</p>
+                    <p><strong>État administratif:</strong> ${entreprise.etat_administratif === "A" ? "Active" : "Fermée"}</p>
+                    <p><strong>Dirigeant:</strong> ${status.dirigeant}</p>
+                `;
+            } else {
+                resultsContainer.style.display = 'block';
+                companyInfoDiv.innerHTML = '';
+                resultDiv.innerHTML = '<p>Aucune entreprise trouvée pour ce SIRET.</p>';
+            }
+        }
+        
+        function checkEntrepriseStatus(dateCreation, effectif, etatAdministratif, codeNaf, isIDF, dirigeant) {
+            const now = new Date();
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+            
+            const eligible = {
+                status: true,
+                reasons: [],
+                criteria: [],
+                dateCreation: dateCreation,
+                effectifMin: effectif,
+                codeNAF: codeNaf,
+                departement: null,
+                isIDF: isIDF,
+                dirigeant: dirigeant
+            };
+            
+            // Vérifier si l'entreprise est active
+            if (etatAdministratif !== "A") {
+                eligible.status = false;
+                eligible.reasons.push("L'entreprise n'est pas active");
+            } else {
+                eligible.criteria.push("Entreprise active");
+            }
+            
+            // Vérifier le code NAF
+            const eligibleNafCodes = [
+                '47', // Commerce de détail
+                '96', // Autres services personnels
+                '45', // Commerce et réparation d'automobiles et de motocycles
+                '56', // Restauration
+                '79', // Activités des agences de voyage, voyagistes, services de réservation
+                '95', // Réparation d'ordinateurs et de biens personnels et domestiques
+                '74', // Autres activités spécialisées, scientifiques et techniques
+                '85', // Enseignement
+                '90', // Activités créatives, artistiques et de spectacle
+                '93', // Activités sportives, récréatives et de loisirs
+                '96.0', // Autres services personnels
+                '10.1', // Transformation et conservation de la viande
+                '10.7', // Fabrication de produits de boulangerie-pâtisserie et de pâtes alimentaires
+                '25.1', // Fabrication d'éléments en métal pour la construction
+                '32.1', // Fabrication de bijoux, bijouterie, joaillerie, orfèvrerie
+                '43.2', // Travaux d'installation électrique, plomberie et autres travaux d'installation
+                '43.3', // Travaux de finition
+                '43.9', // Autres travaux de construction spécialisés
+                '74.1', // Activités spécialisées de design
+                '74.2', // Activités photographiques
+                '81.2', // Activités de nettoyage
+                '82.1', // Activités administratives
+                '88.9', // Autre action sociale sans hébergement
+                '96.0' // Autres services personnels
+            ];
+            
+            // Codes NAF exclus
+            const excludedNafCodes = [
+                '47.11F', // Hypermarchés
+                '47.11D', // Supermarchés
+                '47.11E' // Magasins multi-commerces
+            ];
+            
+            let nafEligible = false;
+            
+            if (excludedNafCodes.includes(codeNaf)) {
+                nafEligible = false;
+            } else {
+                for (const code of eligibleNafCodes) {
+                    if (codeNaf.startsWith(code)) {
+                        nafEligible = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!nafEligible) {
+                eligible.status = false;
+                eligible.reasons.push("Le code NAF de l'entreprise n'est pas éligible");
+            } else {
+                eligible.criteria.push("Code NAF éligible");
+            }
+            
+            // Vérifier la localisation en Île-de-France
+            if (!isIDF) {
+                eligible.status = false;
+                eligible.reasons.push("L'entreprise n'est pas située en Île-de-France");
+            } else {
+                eligible.criteria.push("Entreprise située en Île-de-France");
+            }
+            
+            // Vérifier l'ancienneté (> 6 mois)
+            if (dateCreation > sixMonthsAgo) {
+                eligible.status = false;
+                eligible.reasons.push("L'entreprise a moins de 6 mois d'existence");
+            } else {
+                eligible.criteria.push("Entreprise créée depuis plus de 6 mois");
+            }
+            
+            // Vérifier l'effectif (< 20 salariés)
+            if (effectif && parseInt(effectif) >= 20) {
+                eligible.status = false;
+                eligible.reasons.push("L'effectif de l'entreprise est supérieur ou égal à 20 salariés");
+            } else {
+                eligible.criteria.push("Effectif inférieur à 20 salariés");
+            }
+            
+            return eligible;
+        }
+        
+        function formatDate(date) {
+            if (!date) return 'Non disponible';
+            
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('fr-FR', options);
+        }
+    </script>
+    <div class="footer">
+        <p style="text-align: center;">&copy; 2025 Exedigit - Chèque Numérique</p>
+    </div>
+</body>
+</html>
